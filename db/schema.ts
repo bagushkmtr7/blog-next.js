@@ -25,3 +25,10 @@ export const settings = pgTable('settings', {
   title: text('title').default('My Badak Blog'),
   description: text('description').default('Coding sambil ngopi di Redmi Note 9 Pro'),
 });
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  password: text('password').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});

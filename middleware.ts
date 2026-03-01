@@ -2,29 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const basicAuth = req.headers.get('authorization');
+  // Cek apakah pengunjung punya tiket masuk bernama "admin_session"
+  const session = req.cookies.get('admin_session');
 
-  if (basicAuth) {
-    const authValue = basicAuth.split(' ')[1];
-    // Membaca kombinasi username:password
-    const [user, pwd] = atob(authValue).split(':');
-
-    // 🔑 GANTI USERNAME DAN PASSWORD LU DI SINI:
-    if (user === '1' && pwd === '1') {
-      return NextResponse.next();
-    }
+  // Kalau mau ke halaman /admin tapi BELUM punya tiket, lempar/usir ke /login
+  if (!session && req.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  // Kalau gagal/belum login, munculin popup!
-  return new NextResponse('Akses Ditolak! Masukkan Username dan Password.', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Dashboard Admin ILHAM.LOG"',
-    },
-  });
+  // Kalau udah punya tiket atau halamannya bukan /admin, biarin lewat
+  return NextResponse.next();
 }
 
-// Aturan: Gembok SEMUA halaman yang depannya /admin
 export const config = {
   matcher: ['/admin/:path*'],
 };
