@@ -1,5 +1,5 @@
-import { db } from "@/lib/db";
-import { posts } from "@/lib/db/schema";
+import { db } from "../../db";
+import { posts } from "../../db/schema";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
