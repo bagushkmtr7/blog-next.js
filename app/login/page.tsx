@@ -5,7 +5,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
-export default async function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> | { error?: string } }) {
+  // Ambil searchParams (di Next.js 15 searchParams juga sebaiknya di-await, tapi kita ambil nilai amannya)
+  const resolvedSearchParams = await searchParams;
+  
   async function handleLogin(formData: FormData) {
     "use server";
     const username = formData.get("username") as string;
@@ -22,8 +25,10 @@ export default async function LoginPage({ searchParams }: { searchParams: { erro
         password: hashedPassword,
       });
       
-      // Kasih tiket masuk (cookie) berlaku 7 hari
-      cookies().set("admin_session", "tiket_rahasia_ilham", { httpOnly: true, secure: true, maxAge: 60 * 60 * 24 * 7 });
+      // PERBAIKAN NEXT.JS 15: Pake 'await cookies()'
+      const cookieStore = await cookies();
+      cookieStore.set("admin_session", "tiket_rahasia_ilham", { httpOnly: true, secure: true, maxAge: 60 * 60 * 24 * 7 });
+      
       redirect("/admin");
     }
 
@@ -34,7 +39,10 @@ export default async function LoginPage({ searchParams }: { searchParams: { erro
       const isValid = await bcrypt.compare(password, user[0].password);
       if (isValid) {
         // Password benar! Kasih tiket masuk
-        cookies().set("admin_session", "tiket_rahasia_ilham", { httpOnly: true, secure: true, maxAge: 60 * 60 * 24 * 7 });
+        // PERBAIKAN NEXT.JS 15: Pake 'await cookies()'
+        const cookieStore = await cookies();
+        cookieStore.set("admin_session", "tiket_rahasia_ilham", { httpOnly: true, secure: true, maxAge: 60 * 60 * 24 * 7 });
+        
         redirect("/admin");
       }
     }
@@ -51,7 +59,8 @@ export default async function LoginPage({ searchParams }: { searchParams: { erro
           <p className="text-gray-400 mt-2">Masuk ke Dashboard Admin</p>
         </div>
         
-        {searchParams.error && (
+        {/* Di Next.js 15, objek searchParams juga bisa jadi async */}
+        {(resolvedSearchParams?.error) && (
           <div className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-lg mb-6 text-sm text-center">
             ⚠️ Username atau Password salah, Bre! Coba lagi.
           </div>
